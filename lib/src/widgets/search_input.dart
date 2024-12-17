@@ -14,12 +14,7 @@ class SearchInput extends StatefulWidget {
   ///  Search input config
   final SearchInputConfig inputConfig;
 
-  const SearchInput({
-    super.key,
-    required this.onSearchInput,
-    required this.decorationConfig,
-    required this.inputConfig,
-  });
+  const SearchInput({super.key, required this.onSearchInput, required this.decorationConfig, required this.inputConfig});
 
   @override
   State<StatefulWidget> createState() => SearchInputState();
@@ -49,17 +44,13 @@ class SearchInputState extends State<SearchInput> {
   void onSearchInputChange() {
     if (editController.text.isEmpty) {
       debouncer?.cancel();
-      widget.onSearchInput(editController.text);
-      return;
+
+      return widget.onSearchInput(editController.text);
     }
 
-    if (debouncer?.isActive ?? false) {
-      debouncer?.cancel();
-    }
+    if (debouncer?.isActive ?? false) debouncer?.cancel();
 
-    debouncer = Timer(const Duration(milliseconds: 500), () {
-      widget.onSearchInput(editController.text);
-    });
+    debouncer = Timer(const Duration(milliseconds: 500), () => widget.onSearchInput(editController.text));
   }
 
   @override
@@ -84,23 +75,18 @@ class SearchInputState extends State<SearchInput> {
         hintTextDirection: widget.decorationConfig.hintTextDirection,
         hintFadeDuration: widget.decorationConfig.hintFadeDuration,
         hintMaxLines: widget.decorationConfig.hintMaxLines,
-        prefixIcon: widget.decorationConfig.prefixIcon ??
-            const Icon(
-              Icons.search,
-            ),
+        prefixIcon: widget.decorationConfig.prefixIcon ?? const Icon(Icons.search),
         prefixIconConstraints: widget.decorationConfig.prefixIconConstraints,
         prefixIconColor: widget.decorationConfig.prefixIconColor,
         prefixText: widget.decorationConfig.prefixText,
         prefixStyle: widget.decorationConfig.prefixStyle,
         suffixIcon: hasSearchEntry
             ? GestureDetector(
-                child: widget.decorationConfig.suffixIcon ??
-                    const Icon(Icons.clear),
+                child: widget.decorationConfig.suffixIcon ?? const Icon(Icons.clear),
                 onTap: () {
                   editController.clear();
-                  setState(() {
-                    hasSearchEntry = false;
-                  });
+
+                  setState(() => hasSearchEntry = false);
                 },
               )
             : null,
@@ -116,18 +102,13 @@ class SearchInputState extends State<SearchInput> {
         border: widget.decorationConfig.border ?? InputBorder.none,
         isDense: widget.decorationConfig.isDense,
         filled: widget.decorationConfig.filled,
-        fillColor:
-            widget.decorationConfig.fillColor ?? Theme.of(context).canvasColor,
+        fillColor: widget.decorationConfig.fillColor ?? Theme.of(context).canvasColor,
         contentPadding: widget.decorationConfig.contentPadding,
         enabled: widget.decorationConfig.enabled,
         constraints: widget.decorationConfig.constraints,
       ),
       controller: editController,
-      onChanged: (value) {
-        setState(() {
-          hasSearchEntry = value.isNotEmpty;
-        });
-      },
+      onChanged: (value) => setState(() => hasSearchEntry = value.isNotEmpty),
     );
   }
 }

@@ -13,16 +13,9 @@ import 'package:place_picker_google/src/services/index.dart';
 import 'package:place_picker_google/src/utils/index.dart';
 import 'package:place_picker_google/src/entities/google/index.dart';
 
-typedef SelectedPlaceWidgetBuilder = Widget Function(
-  BuildContext context,
-  SearchingState state,
-  LocationResult? selectedPlace,
-);
+typedef SelectedPlaceWidgetBuilder = Widget Function(BuildContext context, SearchingState state, LocationResult? selectedPlace);
 
-typedef PinWidgetBuilder = Widget Function(
-  BuildContext context,
-  PinState state,
-);
+typedef PinWidgetBuilder = Widget Function(BuildContext context, PinState state);
 
 /// Google place picker widget made with map widget from
 /// [google_maps_flutter](https://github.com/flutter/plugins/tree/master/packages/google_maps_flutter)
@@ -182,8 +175,7 @@ class PlacePicker extends StatefulWidget {
 }
 
 /// Place picker state
-class PlacePickerState extends State<PlacePicker>
-    with TickerProviderStateMixin {
+class PlacePickerState extends State<PlacePicker> with TickerProviderStateMixin {
   /// Map Controller Completer
   final Completer<GoogleMapController> mapController = Completer();
 
@@ -250,54 +242,43 @@ class PlacePickerState extends State<PlacePicker>
   CameraPosition? cameraPosition;
 
   @override
-  void setState(fn) {
-    if (mounted) {
-      super.setState(fn);
-    }
-  }
+  void setState(fn) => mounted ? super.setState(fn) : null;
 
   @override
   void initState() {
     _initializePositionAndMarkers();
+
     super.initState();
   }
 
   @override
   void dispose() {
     _hideOverlay();
+
     super.dispose();
   }
 
   void _initializePositionAndMarkers() async {
     try {
-      final LatLng position =
-          widget.initialLocation ?? await _getCurrentLocation();
+      final LatLng position = widget.initialLocation ?? await _getCurrentLocation();
 
       if (mounted) {
         setState(() {
           _currentLocation = position;
 
           if (!widget.usePinPointingSearch && widget.initialLocation != null) {
-            markers.add(
-              Marker(
-                position: widget.initialLocation!,
-                markerId: const MarkerId("selected-location"),
-              ),
-            );
+            markers.add(Marker(position: widget.initialLocation!, markerId: const MarkerId("selected-location")));
           }
 
           _canLoadMap = true;
         });
       }
     } catch (e) {
-      if (e is LocationServiceDisabledException && mounted) {
-        Navigator.of(context).pop();
-      } else {
-        setState(() {
-          _canLoadMap = true;
-        });
-      }
       debugPrint(e.toString());
+
+      if (e is LocationServiceDisabledException && mounted) return Navigator.of(context).pop();
+
+      setState(() => _canLoadMap = true);
     }
   }
 
@@ -312,9 +293,7 @@ class PlacePickerState extends State<PlacePicker>
     return Material(
       child: Column(
         children: <Widget>[
-          Expanded(
-            child: _canLoadMap ? _buildMapContent() : _buildLoadingIndicator(),
-          ),
+          Expanded(child: _canLoadMap ? _buildMapContent() : _buildLoadingIndicator()),
           _buildSelectedPlace(),
           if (widget.enableNearbyPlaces) _buildNearbyPlaces(),
         ],
@@ -336,9 +315,7 @@ class PlacePickerState extends State<PlacePicker>
   Widget _buildGoogleMap() {
     return GoogleMap(
       initialCameraPosition: CameraPosition(
-        target: widget.initialLocation ??
-            _currentLocation ??
-            PlacePicker.defaultLocation,
+        target: widget.initialLocation ?? _currentLocation ?? PlacePicker.defaultLocation,
         zoom: _getInitialZoom(),
       ),
       minMaxZoomPreference: widget.minMaxZoomPreference,
@@ -356,15 +333,11 @@ class PlacePickerState extends State<PlacePicker>
   }
 
   double _getInitialZoom() {
-    return (_currentLocation == null && widget.initialLocation == null)
-        ? 4
-        : _zoom;
+    return (_currentLocation == null && widget.initialLocation == null) ? 4 : _zoom;
   }
 
   Widget _buildLoadingIndicator() {
-    return Platform.isiOS
-        ? const CupertinoActivityIndicator()
-        : const Center(child: CircularProgressIndicator());
+    return Platform.isiOS ? const CupertinoActivityIndicator() : const Center(child: CircularProgressIndicator());
   }
 
   Widget _buildSearchInput() {
@@ -387,10 +360,7 @@ class PlacePickerState extends State<PlacePicker>
   Widget _buildPinPointingIndicator() {
     return Positioned.fill(
       child: UnconstrainedBox(
-        child: FractionalTranslation(
-          translation: const Offset(0, -0.5),
-          child: _buildPinWidget(),
-        ),
+        child: FractionalTranslation(translation: const Offset(0, -0.5), child: _buildPinWidget()),
       ),
     );
   }
@@ -431,15 +401,11 @@ class PlacePickerState extends State<PlacePicker>
     /// if not pin pointing search
     /// set pin state as dragging and update and
     /// call the places API after the debounce is completed.
-    if (widget.usePinPointingSearch &&
-        _pinState == PinState.dragging &&
-        cameraPosition != null) {
+    if (widget.usePinPointingSearch && _pinState == PinState.dragging && cameraPosition != null) {
       _debouncePinPointing(cameraPosition!.target);
     }
 
-    setState(() {
-      _pinState = PinState.idle;
-    });
+    setState(() => _pinState = PinState.idle);
   }
 
   /// On Camera move started
@@ -448,9 +414,8 @@ class PlacePickerState extends State<PlacePicker>
 
     setState(() {
       _pinState = PinState.dragging;
-      if (widget.usePinPointingSearch) {
-        _searchingState = SearchingState.searching;
-      }
+
+      if (widget.usePinPointingSearch) _searchingState = SearchingState.searching;
     });
   }
 
@@ -468,11 +433,7 @@ class PlacePickerState extends State<PlacePicker>
 
   /// On user taps map
   onTap(LatLng position) {
-    if (!widget.usePinPointingSearch) {
-      setState(() {
-        _searchingState = SearchingState.searching;
-      });
-    }
+    if (!widget.usePinPointingSearch) setState(() => _searchingState = SearchingState.searching);
 
     _clearOverlay();
     animateToLocation(position);
@@ -481,10 +442,8 @@ class PlacePickerState extends State<PlacePicker>
   /// Debounce function for pin-pointing search
   void _debouncePinPointing(LatLng target) {
     _debounce?.cancel();
-    _debounce =
-        Timer(Duration(milliseconds: widget.pinPointingDebounceDuration), () {
-      animateToLocation(target);
-    });
+
+    _debounce = Timer(Duration(milliseconds: widget.pinPointingDebounceDuration), () => animateToLocation(target));
   }
 
   /// My Location Widget
@@ -499,10 +458,8 @@ class PlacePickerState extends State<PlacePicker>
         elevation: widget.myLocationFABConfig.elevation,
         mini: widget.myLocationFABConfig.mini,
         tooltip: widget.myLocationFABConfig.tooltip,
-        backgroundColor: widget.myLocationFABConfig.backgroundColor ??
-            Theme.of(context).primaryColor,
-        foregroundColor: widget.myLocationFABConfig.foregroundColor ??
-            Theme.of(context).colorScheme.onPrimary,
+        backgroundColor: widget.myLocationFABConfig.backgroundColor ?? Theme.of(context).primaryColor,
+        foregroundColor: widget.myLocationFABConfig.foregroundColor ?? Theme.of(context).colorScheme.onPrimary,
         onPressed: _locateMe,
         child: widget.myLocationFABConfig.child ?? const Icon(Icons.gps_fixed),
       ),
@@ -518,44 +475,25 @@ class PlacePickerState extends State<PlacePicker>
         child: SelectPlaceWidget(
           locationName: getLocationName(),
           formattedAddress: getFormattedLocationName(),
-          onTap: _geocodingResult != null
-              ? () {
-                  widget.onPlacePicked?.call(_geocodingResult!);
-                }
-              : null,
+          onTap: _geocodingResult != null ? () => widget.onPlacePicked?.call(_geocodingResult!) : null,
           actionText: widget.localizationConfig.selectActionLocation,
           locationNameStyle: widget.selectedLocationNameStyle,
           formattedAddressStyle: widget.selectedFormattedAddressStyle,
           actionChild: widget.selectedActionButtonChild,
         ),
       );
-    } else {
-      return Builder(
-        builder: (ctx) => widget.selectedPlaceWidgetBuilder!(
-          ctx,
-          _searchingState,
-          _geocodingResult,
-        ),
-      );
     }
+
+    return Builder(builder: (ctx) => widget.selectedPlaceWidgetBuilder!(ctx, _searchingState, _geocodingResult));
   }
 
   /// Pin Widget for Pin point selection
   Widget _buildPinWidget() {
     if (widget.pinPointingPinWidgetBuilder == null) {
-      return AnimatedPin(
-        state: _pinState,
-        child: const Icon(
-          Icons.place,
-          size: 40,
-          color: Colors.red,
-        ),
-      );
-    } else {
-      return Builder(
-        builder: (ctx) => widget.pinPointingPinWidgetBuilder!(ctx, _pinState),
-      );
+      return AnimatedPin(state: _pinState, child: const Icon(Icons.place, size: 40, color: Colors.red));
     }
+
+    return Builder(builder: (ctx) => widget.pinPointingPinWidgetBuilder!(ctx, _pinState));
   }
 
   /// Hides the autocomplete overlay
@@ -581,8 +519,7 @@ class PlacePickerState extends State<PlacePicker>
 
     if (place.isEmpty) return;
 
-    final RenderBox? searchInputBox =
-        searchInputKey.currentContext?.findRenderObject() as RenderBox?;
+    final RenderBox? searchInputBox = searchInputKey.currentContext?.findRenderObject() as RenderBox?;
 
     _suggestionsOverlayEntry = _createSuggestionsOverlay(searchInputBox);
 
@@ -611,17 +548,10 @@ class PlacePickerState extends State<PlacePicker>
                   SizedBox(
                     height: 24,
                     width: 24,
-                    child: Platform.isiOS
-                        ? const CupertinoActivityIndicator()
-                        : const CircularProgressIndicator(),
+                    child: Platform.isiOS ? const CupertinoActivityIndicator() : const CircularProgressIndicator(),
                   ),
                   const SizedBox(width: 24),
-                  Expanded(
-                    child: Text(
-                      widget.localizationConfig.findingPlace,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  )
+                  Expanded(child: Text(widget.localizationConfig.findingPlace, style: const TextStyle(fontSize: 16)))
                 ],
               ),
             ),
@@ -644,10 +574,7 @@ class PlacePickerState extends State<PlacePicker>
         radius: widget.autocompletePlacesSearchRadius,
       );
 
-      if (response.statusCode != 200) {
-        throw Exception(
-            'Failed to load auto complete predictions of place: $place.');
-      }
+      if (response.statusCode != 200) throw Exception('Failed to load auto complete predictions of place: $place.');
 
       final responseJson = jsonDecode(response.body);
 
@@ -662,8 +589,7 @@ class PlacePickerState extends State<PlacePicker>
   }
 
   /// Parses the `predictions` into `RichSuggestion` array.
-  List<RichSuggestion> _parseAutoCompleteSuggestions(
-      List<dynamic>? predictions) {
+  List<RichSuggestion> _parseAutoCompleteSuggestions(List<dynamic>? predictions) {
     if (predictions == null || predictions.isEmpty) {
       return [
         RichSuggestion(
@@ -695,8 +621,7 @@ class PlacePickerState extends State<PlacePicker>
 
   /// Display autocomplete suggestions with the overlay.
   void displayAutoCompleteSuggestions(List<RichSuggestion> suggestions) {
-    final RenderBox? searchInputBox =
-        searchInputKey.currentContext?.findRenderObject() as RenderBox?;
+    final RenderBox? searchInputBox = searchInputKey.currentContext?.findRenderObject() as RenderBox?;
 
     _clearOverlay();
 
@@ -711,10 +636,7 @@ class PlacePickerState extends State<PlacePicker>
             elevation: widget.autoCompleteOverlayElevation,
             child: ColoredBox(
               color: Theme.of(context).canvasColor,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: suggestions,
-              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: suggestions),
             ),
           ),
         ),
@@ -732,26 +654,17 @@ class PlacePickerState extends State<PlacePicker>
     _clearOverlay();
 
     try {
-      final response = await googlePlacePickerService.details(
-        placeId,
-        language: widget.localizationConfig.languageCode,
-        sessionToken: sessionToken,
-      );
+      final response = await googlePlacePickerService.details(placeId, language: widget.localizationConfig.languageCode, sessionToken: sessionToken);
 
-      if (response.statusCode != 200) {
-        throw Exception('Failed to fetch details of placeId: $placeId.');
-      }
+      if (response.statusCode != 200) throw Exception('Failed to fetch details of placeId: $placeId.');
 
       final responseJson = jsonDecode(response.body);
 
-      if (responseJson['result'] == null) {
-        throw Error();
-      }
+      if (responseJson['result'] == null) throw Error();
 
       final location = responseJson['result']['geometry']['location'];
-      if (mapController.isCompleted) {
-        await animateToLocation(LatLng(location['lat'], location['lng']));
-      }
+
+      if (mapController.isCompleted) await animateToLocation(LatLng(location['lat'], location['lng']));
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -761,12 +674,8 @@ class PlacePickerState extends State<PlacePicker>
   void setMarker(LatLng latLng) {
     setState(() {
       markers.clear();
-      markers.add(
-        Marker(
-          markerId: const MarkerId("selected-location"),
-          position: latLng,
-        ),
-      );
+
+      markers.add(Marker(markerId: const MarkerId("selected-location"), position: latLng));
     });
   }
 
@@ -778,14 +687,7 @@ class PlacePickerState extends State<PlacePicker>
 
     final controller = await mapController.future;
 
-    await controller.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: latLng,
-          zoom: _zoom,
-        ),
-      ),
-    );
+    await controller.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: latLng, zoom: _zoom)));
 
     /// Set Marker
     if (!widget.usePinPointingSearch) setMarker(latLng);
@@ -798,19 +700,15 @@ class PlacePickerState extends State<PlacePicker>
     _isAnimating = false;
 
     /// set searching state to idle
-    setState(() {
-      _searchingState = SearchingState.idle;
-    });
+    setState(() => _searchingState = SearchingState.idle);
   }
 
   void moveToCurrentUserLocation() async {
-    if (widget.initialLocation != null) {
-      animateToLocation(widget.initialLocation!);
-    } else if (_currentLocation != null) {
-      animateToLocation(_currentLocation!);
-    } else {
-      animateToLocation(PlacePicker.defaultLocation);
-    }
+    if (widget.initialLocation != null) return animateToLocation(widget.initialLocation!);
+
+    if (_currentLocation != null) return animateToLocation(_currentLocation!);
+
+    animateToLocation(PlacePicker.defaultLocation);
   }
 
   /// Callback if user has enabled [myLocationButtonEnabled].
@@ -819,17 +717,15 @@ class PlacePickerState extends State<PlacePicker>
   Future<void> _locateMe() async {
     try {
       /// set searching state as searching
-      setState(() {
-        _searchingState = SearchingState.searching;
-      });
+      setState(() => _searchingState = SearchingState.searching);
 
       /// get the current location of user
       final LatLng position = await _getCurrentLocation();
+
       animateToLocation(position);
     } catch (e) {
-      if (e is LocationServiceDisabledException && mounted) {
-        Navigator.of(context).pop();
-      }
+      if (e is LocationServiceDisabledException && mounted) Navigator.of(context).pop();
+
       debugPrint(e.toString());
     }
   }
@@ -838,39 +734,32 @@ class PlacePickerState extends State<PlacePicker>
   /// to be the road name and the locality.
   Future<void> reverseGeocodeLatLng(LatLng latLng) async {
     try {
-      final url = Uri.parse("${widget.mapsBaseUrl}geocode/json?"
-          "latlng=${latLng.latitude},${latLng.longitude}&"
-          "language=${widget.localizationConfig.languageCode}&"
-          "key=${widget.apiKey}");
+      final url = Uri.parse(
+        "${widget.mapsBaseUrl}geocode/json?"
+        "latlng=${latLng.latitude},${latLng.longitude}&"
+        "language=${widget.localizationConfig.languageCode}&"
+        "key=${widget.apiKey}",
+      );
 
       final response = await http.get(url);
 
-      if (response.statusCode != 200) {
-        throw Exception('Failed to geocode of location: $latLng.');
-      }
+      if (response.statusCode != 200) throw Exception('Failed to geocode of location: $latLng.');
 
       final responseJson = jsonDecode(response.body);
 
-      if (responseJson['results'] == null) {
-        throw Error();
-      }
+      if (responseJson['results'] == null) throw Error();
 
       /// clear the geocodingResultList
       _geocodingResultList.clear();
 
       final geocodingResponse = geocodingResponseFromJson(response.body);
 
-      if (geocodingResponse.results != null &&
-          geocodingResponse.results!.isNotEmpty) {
+      if (geocodingResponse.results != null && geocodingResponse.results!.isNotEmpty) {
         /// Loop through all the results provided by google geocoding API
-        for (int resultIdx = 0;
-            resultIdx < geocodingResponse.results!.length;
-            resultIdx++) {
-          final GeocodingResultGG geocodingResultRaw =
-              geocodingResponse.results![resultIdx];
+        for (int resultIdx = 0; resultIdx < geocodingResponse.results!.length; resultIdx++) {
+          final GeocodingResultGG geocodingResultRaw = geocodingResponse.results![resultIdx];
 
-          if (geocodingResultRaw.addressComponents != null &&
-              geocodingResultRaw.addressComponents!.isNotEmpty) {
+          if (geocodingResultRaw.addressComponents != null && geocodingResultRaw.addressComponents!.isNotEmpty) {
             /// Initialize the short and long variables
             String name = "";
             String? routeShortName,
@@ -901,12 +790,8 @@ class PlacePickerState extends State<PlacePicker>
             LocationResult? geocodingResult;
 
             /// Loop through all the address components for each results
-            for (int addressComponentsIdx = 0;
-                addressComponentsIdx <
-                    geocodingResultRaw.addressComponents!.length;
-                addressComponentsIdx++) {
-              final AddressComponentGG addressComponentRaw =
-                  geocodingResultRaw.addressComponents![addressComponentsIdx];
+            for (int addressComponentsIdx = 0; addressComponentsIdx < geocodingResultRaw.addressComponents!.length; addressComponentsIdx++) {
+              final AddressComponentGG addressComponentRaw = geocodingResultRaw.addressComponents![addressComponentsIdx];
 
               /// Types provided for each address components by geocoding API from google
               final types = addressComponentRaw.types;
@@ -929,39 +814,55 @@ class PlacePickerState extends State<PlacePicker>
                 /// [premise]
                 /// [route]
               } else if (addressComponentsIdx == 1 && isOnStreet) {
-                if (types.contains('route')) {
-                  name += ", $shortName";
-                }
+                if (types.contains('route')) name += ", $shortName";
               }
 
               if (types.contains("street_number")) {
                 streetNumberLongName = longName;
                 streetNumberShortName = shortName;
-              } else if (types.contains("route")) {
+              }
+
+              if (types.contains("route")) {
                 routeLongName = longName;
                 routeShortName = shortName;
-              } else if (types.contains("country")) {
+              }
+
+              if (types.contains("country")) {
                 countryLongName = longName;
                 countryShortName = shortName;
-              } else if (types.contains("locality")) {
+              }
+
+              if (types.contains("locality")) {
                 localityLongName = longName;
                 localityShortName = shortName;
-              } else if (types.contains("sublocality_level_1")) {
+              }
+
+              if (types.contains("sublocality_level_1")) {
                 subLocalityLevel1LongName = longName;
                 subLocalityLevel1ShortName = shortName;
-              } else if (types.contains("sublocality_level_2")) {
+              }
+
+              if (types.contains("sublocality_level_2")) {
                 subLocalityLevel2LongName = longName;
                 subLocalityLevel2ShortName = shortName;
-              } else if (types.contains("administrative_area_level_1")) {
+              }
+
+              if (types.contains("administrative_area_level_1")) {
                 administrativeAreaLevel1LongName = longName;
                 administrativeAreaLevel1ShortName = shortName;
-              } else if (types.contains("administrative_area_level_2")) {
+              }
+
+              if (types.contains("administrative_area_level_2")) {
                 administrativeAreaLevel2LongName = longName;
                 administrativeAreaLevel2ShortName = shortName;
-              } else if (types.contains('postal_code')) {
+              }
+
+              if (types.contains('postal_code')) {
                 postalCodeLongName = longName;
                 postalCodeShortName = shortName;
-              } else if (types.contains('plus_code')) {
+              }
+
+              if (types.contains('plus_code')) {
                 plusCodeLongName = longName;
                 plusCodeShortName = shortName;
               }
@@ -971,62 +872,29 @@ class PlacePickerState extends State<PlacePicker>
                 ..latLng = latLng
                 ..formattedAddress = geocodingResultRaw.formattedAddress
                 ..placeId = geocodingResultRaw.placeId
-                ..streetNumber = AddressComponent(
-                  longName: streetNumberLongName,
-                  shortName: streetNumberShortName,
-                )
-                ..route = AddressComponent(
-                  longName: routeLongName,
-                  shortName: routeShortName,
-                )
-                ..country = AddressComponent(
-                  longName: countryLongName,
-                  shortName: countryShortName,
-                )
+                ..streetNumber = AddressComponent(longName: streetNumberLongName, shortName: streetNumberShortName)
+                ..route = AddressComponent(longName: routeLongName, shortName: routeShortName)
+                ..country = AddressComponent(longName: countryLongName, shortName: countryShortName)
                 ..locality = AddressComponent(
-                  longName:
-                      localityLongName ?? administrativeAreaLevel1LongName,
-                  shortName:
-                      localityShortName ?? administrativeAreaLevel1ShortName,
+                  longName: localityLongName ?? administrativeAreaLevel1LongName,
+                  shortName: localityShortName ?? administrativeAreaLevel1ShortName,
                 )
-                ..administrativeAreaLevel1 = AddressComponent(
-                  longName: administrativeAreaLevel1LongName,
-                  shortName: administrativeAreaLevel1ShortName,
-                )
-                ..administrativeAreaLevel2 = AddressComponent(
-                  longName: administrativeAreaLevel2LongName,
-                  shortName: administrativeAreaLevel2ShortName,
-                )
-                ..subLocalityLevel1 = AddressComponent(
-                  longName: subLocalityLevel1LongName,
-                  shortName: subLocalityLevel1ShortName,
-                )
-                ..subLocalityLevel2 = AddressComponent(
-                  longName: subLocalityLevel2LongName,
-                  shortName: subLocalityLevel2ShortName,
-                )
-                ..postalCode = AddressComponent(
-                  longName: postalCodeLongName,
-                  shortName: postalCodeShortName,
-                )
-                ..plusCode = AddressComponent(
-                  longName: plusCodeLongName,
-                  shortName: plusCodeShortName,
-                );
+                ..administrativeAreaLevel1 = AddressComponent(longName: administrativeAreaLevel1LongName, shortName: administrativeAreaLevel1ShortName)
+                ..administrativeAreaLevel2 = AddressComponent(longName: administrativeAreaLevel2LongName, shortName: administrativeAreaLevel2ShortName)
+                ..subLocalityLevel1 = AddressComponent(longName: subLocalityLevel1LongName, shortName: subLocalityLevel1ShortName)
+                ..subLocalityLevel2 = AddressComponent(longName: subLocalityLevel2LongName, shortName: subLocalityLevel2ShortName)
+                ..postalCode = AddressComponent(longName: postalCodeLongName, shortName: postalCodeShortName)
+                ..plusCode = AddressComponent(longName: plusCodeLongName, shortName: plusCodeShortName);
             }
 
-            if (geocodingResult != null) {
-              _geocodingResultList.add(geocodingResult);
-            }
+            if (geocodingResult != null) _geocodingResultList.add(geocodingResult);
           }
         }
       }
 
       /// if the geocoding result is list is not empty
       /// set _geocodingResult as the first element of the list
-      if (_geocodingResultList.isNotEmpty) {
-        _geocodingResult = _geocodingResultList.first;
-      }
+      if (_geocodingResultList.isNotEmpty) _geocodingResult = _geocodingResultList.first;
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -1040,15 +908,11 @@ class PlacePickerState extends State<PlacePicker>
         language: widget.localizationConfig.languageCode,
       );
 
-      if (response.statusCode != 200) {
-        throw Exception('Failed to fetch nearby places of location: $latLng.');
-      }
+      if (response.statusCode != 200) throw Exception('Failed to fetch nearby places of location: $latLng.');
 
       final responseJson = jsonDecode(response.body);
 
-      if (responseJson['results'] == null) {
-        throw Error();
-      }
+      if (responseJson['results'] == null) throw Error();
 
       nearbyPlaces.clear();
 
@@ -1056,8 +920,7 @@ class PlacePickerState extends State<PlacePicker>
         final nearbyPlace = NearbyPlace()
           ..name = item['name']
           ..icon = item['icon']
-          ..latLng = LatLng(item['geometry']['location']['lat'],
-              item['geometry']['location']['lng']);
+          ..latLng = LatLng(item['geometry']['location']['lat'], item['geometry']['location']['lng']);
 
         nearbyPlaces.add(nearbyPlace);
       }
@@ -1079,11 +942,10 @@ class PlacePickerState extends State<PlacePicker>
       /// App to enable the location services.
       if (mounted) {
         final bool? isOk = await _showLocationDisabledAlertDialog(context);
-        if (isOk ?? false) {
-          return Future.error(const LocationServiceDisabledException());
-        } else {
-          return Future.error('Location Services is not enabled');
-        }
+
+        if (isOk ?? false) return Future.error(const LocationServiceDisabledException());
+
+        return Future.error('Location Services is not enabled');
       }
     }
     permission = await Geolocator.checkPermission();
@@ -1101,8 +963,7 @@ class PlacePickerState extends State<PlacePicker>
     if (permission == LocationPermission.deniedForever) {
       /// Permissions are denied forever, handle appropriately.
       /// return widget.defaultLocation;
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
+      return Future.error('Location permissions are permanently denied, we cannot request permissions.');
     }
     try {
       final locationData = await Geolocator.getCurrentPosition();
@@ -1111,11 +972,10 @@ class PlacePickerState extends State<PlacePicker>
       return target;
     } on TimeoutException catch (_) {
       final locationData = await Geolocator.getLastKnownPosition();
-      if (locationData != null) {
-        return LatLng(locationData.latitude, locationData.longitude);
-      } else {
-        return PlacePicker.defaultLocation;
-      }
+
+      if (locationData != null) return LatLng(locationData.latitude, locationData.longitude);
+
+      return PlacePicker.defaultLocation;
     }
   }
 
@@ -1126,52 +986,38 @@ class PlacePickerState extends State<PlacePicker>
           builder: (BuildContext ctx) {
             return CupertinoAlertDialog(
               title: const Text("Location is disabled"),
-              content: const Text(
-                  "To use location, go to your Settings App > Privacy > Location Services."),
+              content: const Text("To use location, go to your Settings App > Privacy > Location Services."),
               actions: [
-                CupertinoDialogAction(
-                  child: const Text("Cancel"),
-                  onPressed: () {
-                    Navigator.of(context).pop(false);
-                  },
-                ),
-                CupertinoDialogAction(
-                  child: const Text("Ok"),
-                  onPressed: () {
-                    Navigator.of(context).pop(true);
-                  },
-                )
+                CupertinoDialogAction(child: const Text("Cancel"), onPressed: () => Navigator.of(context).pop(false)),
+                CupertinoDialogAction(child: const Text("Ok"), onPressed: () => Navigator.of(context).pop(true))
               ],
             );
           });
-    } else {
-      return showDialog(
-        context: context,
-        builder: (BuildContext ctx) {
-          return AlertDialog(
-            title: const Text("Location is disabled"),
-            content: const Text(
-                "The app needs to access your location. Please enable location service."),
-            actions: [
-              TextButton(
-                child: const Text("Cancel"),
-                onPressed: () async {
-                  Navigator.of(context).pop(false);
-                },
-              ),
-              TextButton(
-                child: const Text("OK"),
-                onPressed: () async {
-                  await Geolocator.openLocationSettings().then((value) {
-                    if (mounted) Navigator.of(context).pop(true);
-                  });
-                },
-              ),
-            ],
-          );
-        },
-      );
     }
+
+    return showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          title: const Text("Location is disabled"),
+          content: const Text("The app needs to access your location. Please enable location service."),
+          actions: [
+            TextButton(
+              child: const Text("Cancel"),
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
+            TextButton(
+              child: const Text("OK"),
+              onPressed: () async {
+                final value = await Geolocator.openLocationSettings();
+
+                if (mounted) Navigator.of(context).pop(value);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   /// Utility function to get clean readable name of a location. First checks
@@ -1180,18 +1026,14 @@ class PlacePickerState extends State<PlacePicker>
   /// result, instead of road name). If no name is found from the nearby list,
   /// then the road name returned is used instead.
   String? getLocationName() {
-    if (_geocodingResult == null) {
-      return widget.localizationConfig.unnamedLocation;
-    }
+    if (_geocodingResult == null) return widget.localizationConfig.unnamedLocation;
 
     return _geocodingResult?.name;
   }
 
   /// Utility function to get clean readable formatted address of a location.
   String getFormattedLocationName() {
-    if (_geocodingResult == null) {
-      return widget.localizationConfig.unnamedLocation;
-    }
+    if (_geocodingResult == null) return widget.localizationConfig.unnamedLocation;
 
     return "${_geocodingResult?.formattedAddress}";
   }

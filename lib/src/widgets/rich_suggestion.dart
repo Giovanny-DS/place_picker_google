@@ -5,11 +5,7 @@ class RichSuggestion extends StatelessWidget {
   final VoidCallback? onTap;
   final AutoCompleteItem autoCompleteItem;
 
-  const RichSuggestion({
-    super.key,
-    required this.autoCompleteItem,
-    this.onTap,
-  });
+  const RichSuggestion({super.key, required this.autoCompleteItem, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -17,11 +13,7 @@ class RichSuggestion extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: RichText(
-          text: TextSpan(
-            children: getStyledTexts(context),
-          ),
-        ),
+        child: RichText(text: TextSpan(children: getStyledTexts(context))),
       ),
     );
   }
@@ -30,29 +22,15 @@ class RichSuggestion extends StatelessWidget {
     final List<TextSpan> result = [];
     const style = TextStyle(color: Colors.grey, fontSize: 15);
 
-    final startText =
-        autoCompleteItem.text?.substring(0, autoCompleteItem.offset);
-    if (startText?.isNotEmpty == true) {
-      result.add(TextSpan(text: startText, style: style));
-    }
+    final startText = autoCompleteItem.text?.substring(0, autoCompleteItem.offset);
 
-    final boldText = autoCompleteItem.text?.substring(
-      autoCompleteItem.offset!,
-      autoCompleteItem.offset! + autoCompleteItem.length!,
-    );
-    result.add(
-      TextSpan(
-        text: boldText,
-        style:
-            style.copyWith(color: Theme.of(context).textTheme.bodyLarge?.color),
-      ),
-    );
+    if (startText?.isNotEmpty == true) result.add(TextSpan(text: startText, style: style));
 
-    final remainingText = autoCompleteItem.text
-        ?.substring(autoCompleteItem.offset! + autoCompleteItem.length!);
-    result.add(
-      TextSpan(text: remainingText, style: style),
-    );
+    final boldText = autoCompleteItem.text?.substring(autoCompleteItem.offset!, autoCompleteItem.offset! + autoCompleteItem.length!);
+    result.add(TextSpan(text: boldText, style: style.copyWith(color: Theme.of(context).textTheme.bodyLarge?.color)));
+
+    final remainingText = autoCompleteItem.text?.substring(autoCompleteItem.offset! + autoCompleteItem.length!);
+    result.add(TextSpan(text: remainingText, style: style));
 
     return result;
   }
