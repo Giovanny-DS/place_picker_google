@@ -4,13 +4,7 @@ import 'package:http/http.dart' as http;
 import 'google_maps_http_service.dart';
 
 class GoogleMapsPlaces extends GoogleMapsHTTPService {
-  GoogleMapsPlaces({
-    super.apiKey,
-    super.baseUrl,
-    super.httpClient,
-    super.apiHeaders,
-    super.apiPath = 'place/',
-  });
+  GoogleMapsPlaces({super.apiKey, super.baseUrl, super.httpClient, super.apiHeaders, super.apiPath = 'place/'});
 
   Future<http.Response> autocomplete(
     /// final String input,
@@ -51,8 +45,7 @@ class GoogleMapsPlaces extends GoogleMapsHTTPService {
     final params = {
       'input': query,
       if (apiKey != null) 'key': apiKey,
-      if (location != null)
-        'location': "${location.latitude}, ${location.longitude}",
+      if (location != null) 'location': "${location.latitude}, ${location.longitude}",
       if (language != null) 'language': language,
       if (origin != null) 'origin': origin.toString(),
       if (radius != null) 'radius': radius.toString(),
@@ -63,12 +56,7 @@ class GoogleMapsPlaces extends GoogleMapsHTTPService {
       if (sessionToken != null) 'sessiontoken': sessionToken,
     };
 
-    final autocompleteUrl = url
-        .replace(
-          path: '${url.path}autocomplete/json',
-          queryParameters: params,
-        )
-        .toString();
+    final autocompleteUrl = url.replace(path: '${url.path}autocomplete/json', queryParameters: params).toString();
 
     return await doGet(autocompleteUrl, headers: apiHeaders);
   }
@@ -98,12 +86,7 @@ class GoogleMapsPlaces extends GoogleMapsHTTPService {
       if (keyword != null) 'keyword': keyword,
     };
 
-    final nearbySearchUrl = url
-        .replace(
-          path: '${url.path}nearbysearch/json',
-          queryParameters: params,
-        )
-        .toString();
+    final nearbySearchUrl = url.replace(path: '${url.path}nearbysearch/json', queryParameters: params).toString();
 
     return await doGet(nearbySearchUrl, headers: apiHeaders);
   }
@@ -132,12 +115,7 @@ class GoogleMapsPlaces extends GoogleMapsHTTPService {
       if (fields.isNotEmpty) 'fields': fields.join(','),
     };
 
-    final detailsUrl = url
-        .replace(
-          path: '${url.path}details/json',
-          queryParameters: params,
-        )
-        .toString();
+    final detailsUrl = url.replace(path: '${url.path}details/json', queryParameters: params).toString();
 
     return await doGet(detailsUrl, headers: apiHeaders);
   }

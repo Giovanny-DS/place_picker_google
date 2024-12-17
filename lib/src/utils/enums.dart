@@ -10,11 +10,7 @@ enum AddressComponentTypes {
   administrativeAreaLevel2,
 }
 
-enum PinState {
-  preparing,
-  idle,
-  dragging,
-}
+enum PinState { preparing, idle, dragging }
 
 enum SearchingState {
   idle,

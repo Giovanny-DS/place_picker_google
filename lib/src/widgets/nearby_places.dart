@@ -34,14 +34,8 @@ class NearbyPlaces extends StatelessWidget {
           const Divider(),
           if (nearbyPlaceText != null)
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 8,
-              ),
-              child: Text(
-                nearbyPlaceText!,
-                style: nearbyPlaceStyle ?? const TextStyle(fontSize: 16),
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              child: Text(nearbyPlaceText!, style: nearbyPlaceStyle ?? const TextStyle(fontSize: 16)),
             ),
           Expanded(
             child: ListView(
@@ -50,11 +44,7 @@ class NearbyPlaces extends StatelessWidget {
                   .map(
                     (it) => NearbyPlaceItem(
                       nearbyPlace: it,
-                      onTap: () {
-                        if (it.latLng != null) {
-                          moveToLocation?.call(it.latLng!);
-                        }
-                      },
+                      onTap: () => it.latLng != null ? moveToLocation?.call(it.latLng!) : null,
                       nearbyPlaceStyle: nearbyPlaceItemStyle,
                     ),
                   )
