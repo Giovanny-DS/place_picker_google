@@ -583,6 +583,10 @@ class PlacePickerState extends State<PlacePicker> with TickerProviderStateMixin 
       final suggestions = _parseAutoCompleteSuggestions(predictions);
 
       displayAutoCompleteSuggestions(suggestions);
+
+      if (responseJson["status"] != PlacesAutocompleteStatus.ok.status) {
+        Future.error(responseJson.toString());
+      }
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -749,6 +753,8 @@ class PlacePickerState extends State<PlacePicker> with TickerProviderStateMixin 
 
       if (responseJson['results'] == null) throw Error();
 
+      if (responseJson["status"] != PlacesDetailsStatus.ok.status) Future.error(responseJson.toString());
+
       /// clear the geocodingResultList
       _geocodingResultList.clear();
 
@@ -914,6 +920,8 @@ class PlacePickerState extends State<PlacePicker> with TickerProviderStateMixin 
 
       if (responseJson['results'] == null) throw Error();
 
+      if (responseJson["status"] != NearbySearchStatus.ok.status) Future.error(responseJson.toString());
+
       nearbyPlaces.clear();
 
       for (Map<String, dynamic> item in responseJson['results']) {
@@ -957,7 +965,7 @@ class PlacePickerState extends State<PlacePicker> with TickerProviderStateMixin 
         /// Android's shouldShowRequestPermissionRationale
         /// returned true. According to Android guidelines
         /// your App should show an explanatory UI now.
-        return Future.error('Location permissions are denied');
+        return Future.error('Location permissions are denied.');
       }
     }
     if (permission == LocationPermission.deniedForever) {
